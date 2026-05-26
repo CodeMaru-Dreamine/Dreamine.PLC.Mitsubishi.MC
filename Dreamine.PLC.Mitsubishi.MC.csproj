@@ -34,8 +34,4 @@
 		<ProjectReference Include="..\PLC.Abstractions\Dreamine.PLC.Abstractions.csproj" />
 		<ProjectReference Include="..\PLC.Core\Dreamine.PLC.Core.csproj" />
 	</ItemGroup>
-
-	<ItemGroup>
-	  <Folder Include="Transport\" />
-	</ItemGroup>
 </Project>
