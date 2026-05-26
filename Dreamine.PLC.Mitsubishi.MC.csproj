@@ -28,7 +28,14 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\Communication.Abstractions\Dreamine.Communication.Abstractions.csproj" />
+		<ProjectReference Include="..\Communication.Core\Dreamine.Communication.Core.csproj" />
+		<ProjectReference Include="..\Communication.Sockets\Dreamine.Communication.Sockets.csproj" />
 		<ProjectReference Include="..\PLC.Abstractions\Dreamine.PLC.Abstractions.csproj" />
 		<ProjectReference Include="..\PLC.Core\Dreamine.PLC.Core.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Transport\" />
 	</ItemGroup>
 </Project>
