@@ -57,6 +57,7 @@ public sealed class FakeMitsubishiMcTransport : IMitsubishiMcTransport
     public Task<PlcResult<byte[]>> SendAndReceiveAsync(
         IReadOnlyList<byte> requestFrame,
         int receiveTimeoutMs,
+        int retryCount,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(requestFrame);

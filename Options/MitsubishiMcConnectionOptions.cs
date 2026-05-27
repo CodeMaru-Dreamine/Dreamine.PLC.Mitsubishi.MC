@@ -61,4 +61,15 @@ public sealed class MitsubishiMcConnectionOptions
     /// Gets or sets the MC frame format.
     /// </summary>
     public MitsubishiMcFrameFormat FrameFormat { get; set; } = MitsubishiMcFrameFormat.Binary3E;
+
+    /// <summary>
+    /// Gets or sets the MC transport type.
+    /// </summary>
+    public MitsubishiMcTransportType TransportType { get; set; } = MitsubishiMcTransportType.Tcp;
+
+    /// <summary>
+    /// Gets or sets the retry count for send/receive operations.
+    /// UDP uses this value for timeout retransmission. TCP treats values less than one as one attempt.
+    /// </summary>
+    public int RetryCount { get; set; } = 1;
 }

@@ -8,12 +8,12 @@ namespace Dreamine.PLC.Mitsubishi.MC.Transport;
 public interface IMitsubishiMcTransport : IAsyncDisposable
 {
     /// <summary>
-    /// Gets whether the transport is currently connected.
+    /// Gets whether the transport is currently connected or ready.
     /// </summary>
     bool IsConnected { get; }
 
     /// <summary>
-    /// Connects the transport.
+    /// Connects or prepares the transport.
     /// </summary>
     /// <param name="host">The target host address.</param>
     /// <param name="port">The target port.</param>
@@ -38,10 +38,12 @@ public interface IMitsubishiMcTransport : IAsyncDisposable
     /// </summary>
     /// <param name="requestFrame">The request frame bytes.</param>
     /// <param name="receiveTimeoutMs">The receive timeout in milliseconds.</param>
+    /// <param name="retryCount">The send/receive retry count.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The received response frame bytes.</returns>
     Task<PlcResult<byte[]>> SendAndReceiveAsync(
         IReadOnlyList<byte> requestFrame,
         int receiveTimeoutMs,
+        int retryCount,
         CancellationToken cancellationToken = default);
 }

@@ -19,8 +19,26 @@ The package is designed to keep PLC communication code separated by responsibili
 - Vendor-specific address mapping structure
 - Connection and request handling integration with Dreamine.PLC.Core
 - MC protocol read/write implementation entry points
+- Binary 3E TCP transport
+- Binary 3E UDP transport with timeout retry support
 - Testable adapter design through Dreamine.PLC.Abstractions
 
+
+## Transport Selection
+
+Use `MitsubishiMcConnectionOptions.TransportType` to select TCP or UDP.
+
+```csharp
+var client = new MitsubishiMcPlcClient(new MitsubishiMcConnectionOptions
+{
+    Host = "192.168.0.10",
+    Port = 5000,
+    TransportType = MitsubishiMcTransportType.Tcp,
+    RetryCount = 1
+});
+```
+
+UDP communication does not guarantee delivery, ordering, or single response semantics. Keep retry and timeout policies explicit when connecting to real PLC hardware.
 
 ## Project References
 

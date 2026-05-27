@@ -24,7 +24,7 @@ public sealed class MitsubishiMcPlcClient : PlcClientBase
     public MitsubishiMcPlcClient(MitsubishiMcConnectionOptions options)
         : this(
             options,
-            new TcpMitsubishiMcTransport(),
+            CreateTransport(options),
             new MitsubishiMcBinary3EFrameBuilder(),
             new MitsubishiMcBinary3EResponseParser())
     {
@@ -53,6 +53,18 @@ public sealed class MitsubishiMcPlcClient : PlcClientBase
     /// Gets the Mitsubishi MC connection options.
     /// </summary>
     public MitsubishiMcConnectionOptions Options => _options;
+
+    private static IMitsubishiMcTransport CreateTransport(MitsubishiMcConnectionOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+
+        return options.TransportType switch
+        {
+            MitsubishiMcTransportType.Tcp => new TcpMitsubishiMcTransport(),
+            MitsubishiMcTransportType.Udp => new UdpMitsubishiMcTransport(),
+            _ => throw new ArgumentOutOfRangeException(nameof(options), options.TransportType, "Unsupported Mitsubishi MC transport type.")
+        };
+    }
 
     /// <inheritdoc />
     protected override Task<PlcResult> ConnectCoreAsync(CancellationToken cancellationToken)
@@ -92,6 +104,7 @@ public sealed class MitsubishiMcPlcClient : PlcClientBase
         var responseResult = await _transport.SendAndReceiveAsync(
             frameResult.Value,
             _options.ReceiveTimeoutMs,
+            _options.RetryCount,
             cancellationToken).ConfigureAwait(false);
 
         if (!responseResult.IsSuccess || responseResult.Value is null)
@@ -126,6 +139,7 @@ public sealed class MitsubishiMcPlcClient : PlcClientBase
         var responseResult = await _transport.SendAndReceiveAsync(
             frameResult.Value,
             _options.ReceiveTimeoutMs,
+            _options.RetryCount,
             cancellationToken).ConfigureAwait(false);
 
         if (!responseResult.IsSuccess || responseResult.Value is null)
@@ -159,6 +173,7 @@ public sealed class MitsubishiMcPlcClient : PlcClientBase
         var responseResult = await _transport.SendAndReceiveAsync(
             frameResult.Value,
             _options.ReceiveTimeoutMs,
+            _options.RetryCount,
             cancellationToken).ConfigureAwait(false);
 
         if (!responseResult.IsSuccess || responseResult.Value is null)
@@ -200,6 +215,7 @@ public sealed class MitsubishiMcPlcClient : PlcClientBase
         var responseResult = await _transport.SendAndReceiveAsync(
             frameResult.Value,
             _options.ReceiveTimeoutMs,
+            _options.RetryCount,
             cancellationToken).ConfigureAwait(false);
 
         if (!responseResult.IsSuccess || responseResult.Value is null)

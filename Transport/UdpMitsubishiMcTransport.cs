@@ -1,20 +1,22 @@
-﻿using System.Net.Sockets;
+﻿using System.Net;
+using System.Net.Sockets;
 using Dreamine.PLC.Abstractions.Results;
 
 namespace Dreamine.PLC.Mitsubishi.MC.Transport;
 
 /// <summary>
-/// Provides a TCP transport implementation for Mitsubishi MC protocol communication.
+/// Provides a UDP transport implementation for Mitsubishi MC protocol communication.
 /// </summary>
-public sealed class TcpMitsubishiMcTransport : IMitsubishiMcTransport
+public sealed class UdpMitsubishiMcTransport : IMitsubishiMcTransport
 {
+    private const int MaximumMcResponseFrameLength = 8192;
     private readonly SemaphoreSlim _syncLock = new(1, 1);
-    private TcpClient? _tcpClient;
-    private NetworkStream? _stream;
+    private UdpClient? _udpClient;
+    private IPEndPoint? _remoteEndPoint;
     private bool _disposed;
 
     /// <inheritdoc />
-    public bool IsConnected => _tcpClient?.Connected == true && _stream is not null;
+    public bool IsConnected => _udpClient is not null && _remoteEndPoint is not null;
 
     /// <inheritdoc />
     public async Task<PlcResult> ConnectAsync(
@@ -27,7 +29,7 @@ public sealed class TcpMitsubishiMcTransport : IMitsubishiMcTransport
 
         if (port is <= 0 or > 65535)
         {
-            return PlcResult.Failure($"Invalid TCP port: {port}");
+            return PlcResult.Failure($"Invalid UDP port: {port}");
         }
 
         if (timeoutMs <= 0)
@@ -41,23 +43,20 @@ public sealed class TcpMitsubishiMcTransport : IMitsubishiMcTransport
         {
             ThrowIfDisposed();
 
-            if (IsConnected)
-            {
-                return PlcResult.Success();
-            }
-
             await CloseCoreAsync().ConfigureAwait(false);
 
-            _tcpClient = new TcpClient
+            var addresses = await Dns.GetHostAddressesAsync(host, cancellationToken).ConfigureAwait(false);
+            var address = addresses.FirstOrDefault(a => a.AddressFamily == AddressFamily.InterNetwork)
+                ?? addresses.FirstOrDefault();
+
+            if (address is null)
             {
-                NoDelay = true
-            };
+                return PlcResult.Failure($"Failed to resolve UDP host: {host}");
+            }
 
-            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            timeoutCts.CancelAfter(timeoutMs);
-
-            await _tcpClient.ConnectAsync(host, port, timeoutCts.Token).ConfigureAwait(false);
-            _stream = _tcpClient.GetStream();
+            _remoteEndPoint = new IPEndPoint(address, port);
+            _udpClient = new UdpClient(address.AddressFamily);
+            _udpClient.Connect(_remoteEndPoint);
 
             return PlcResult.Success();
         }
@@ -122,22 +121,57 @@ public sealed class TcpMitsubishiMcTransport : IMitsubishiMcTransport
         {
             ThrowIfDisposed();
 
-            if (_stream is null || _tcpClient is null || !_tcpClient.Connected)
+            if (_udpClient is null || _remoteEndPoint is null)
             {
-                return PlcResult<byte[]>.Failure("The TCP transport is not connected.");
+                return PlcResult<byte[]>.Failure("The UDP transport is not ready.");
             }
 
+            var attempts = Math.Max(1, retryCount);
             var requestBuffer = requestFrame as byte[] ?? requestFrame.ToArray();
+            Exception? lastException = null;
 
-            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            timeoutCts.CancelAfter(receiveTimeoutMs);
+            for (var attempt = 1; attempt <= attempts; attempt++)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
 
-            await _stream.WriteAsync(requestBuffer, timeoutCts.Token).ConfigureAwait(false);
-            await _stream.FlushAsync(timeoutCts.Token).ConfigureAwait(false);
+                using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                timeoutCts.CancelAfter(receiveTimeoutMs);
 
-            var response = await ReceiveBinary3EFrameAsync(_stream, timeoutCts.Token).ConfigureAwait(false);
+                try
+                {
+                    await _udpClient.SendAsync(requestBuffer, requestBuffer.Length).WaitAsync(timeoutCts.Token).ConfigureAwait(false);
+                    var response = await _udpClient.ReceiveAsync().WaitAsync(timeoutCts.Token).ConfigureAwait(false);
 
-            return PlcResult<byte[]>.Success(response);
+                    if (response.Buffer.Length == 0)
+                    {
+                        lastException = new IOException("The UDP PLC response was empty.");
+                        continue;
+                    }
+
+                    if (response.Buffer.Length > MaximumMcResponseFrameLength)
+                    {
+                        return PlcResult<byte[]>.Failure(
+                            $"The UDP PLC response frame is too large. Length: {response.Buffer.Length}");
+                    }
+
+                    return PlcResult<byte[]>.Success(response.Buffer);
+                }
+                catch (OperationCanceledException ex) when (!cancellationToken.IsCancellationRequested)
+                {
+                    lastException = ex;
+                }
+                catch (SocketException ex)
+                {
+                    lastException = ex;
+                }
+                catch (IOException ex)
+                {
+                    lastException = ex;
+                }
+            }
+
+            return PlcResult<byte[]>.Failure(
+                lastException?.Message ?? "The UDP PLC request timed out.");
         }
         catch (OperationCanceledException ex)
         {
@@ -169,69 +203,17 @@ public sealed class TcpMitsubishiMcTransport : IMitsubishiMcTransport
         GC.SuppressFinalize(this);
     }
 
-    private static async Task<byte[]> ReceiveBinary3EFrameAsync(
-        NetworkStream stream,
-        CancellationToken cancellationToken)
-    {
-        var header = new byte[9];
-
-        await ReadExactlyAsync(stream, header, cancellationToken).ConfigureAwait(false);
-
-        var responseDataLength = header[7] | (header[8] << 8);
-        if (responseDataLength < 2)
-        {
-            throw new InvalidOperationException(
-                $"Invalid Mitsubishi MC response data length: {responseDataLength}");
-        }
-
-        var body = new byte[responseDataLength];
-
-        await ReadExactlyAsync(stream, body, cancellationToken).ConfigureAwait(false);
-
-        var frame = new byte[header.Length + body.Length];
-
-        Buffer.BlockCopy(header, 0, frame, 0, header.Length);
-        Buffer.BlockCopy(body, 0, frame, header.Length, body.Length);
-
-        return frame;
-    }
-
-    private static async Task ReadExactlyAsync(
-        NetworkStream stream,
-        byte[] buffer,
-        CancellationToken cancellationToken)
-    {
-        var offset = 0;
-
-        while (offset < buffer.Length)
-        {
-            var read = await stream.ReadAsync(
-                buffer.AsMemory(offset, buffer.Length - offset),
-                cancellationToken).ConfigureAwait(false);
-
-            if (read == 0)
-            {
-                throw new IOException("The remote PLC closed the TCP connection.");
-            }
-
-            offset += read;
-        }
-    }
-
     private Task CloseCoreAsync()
     {
         try
         {
-            _stream?.Close();
-            _stream?.Dispose();
-
-            _tcpClient?.Close();
-            _tcpClient?.Dispose();
+            _udpClient?.Close();
+            _udpClient?.Dispose();
         }
         finally
         {
-            _stream = null;
-            _tcpClient = null;
+            _udpClient = null;
+            _remoteEndPoint = null;
         }
 
         return Task.CompletedTask;
