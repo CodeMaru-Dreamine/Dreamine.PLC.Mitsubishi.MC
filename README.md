@@ -1,5 +1,7 @@
 # Dreamine.PLC.Mitsubishi.MC
 
+[Korean documentation](./README_KO.md)
+
 Mitsubishi MC protocol adapter for Dreamine PLC communication.
 
 This package provides Mitsubishi MC TCP/UDP client support and built-in MC protocol simulator servers for local and PC-to-PC validation.
