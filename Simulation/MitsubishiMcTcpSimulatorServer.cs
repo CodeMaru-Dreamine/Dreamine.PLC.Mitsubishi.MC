@@ -147,6 +147,7 @@ public sealed class MitsubishiMcTcpSimulatorServer : IAsyncDisposable
             var task = Task.Run(() => HandleClientAsync(client, cancellationToken), CancellationToken.None);
             lock (_syncRoot)
             {
+                _clientTasks.RemoveAll(static item => item.IsCompleted);
                 _clientTasks.Add(task);
             }
         }

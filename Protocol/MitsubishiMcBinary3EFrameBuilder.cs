@@ -165,7 +165,8 @@ public sealed class MitsubishiMcBinary3EFrameBuilder
         int count,
         MitsubishiMcDeviceCode deviceCode)
     {
-        var payload = new List<byte>();
+        const int batchAccessHeaderLength = 10;
+        var payload = new List<byte>(batchAccessHeaderLength);
 
         MitsubishiMcEndian.WriteUInt16LittleEndian(payload, (ushort)command);
         MitsubishiMcEndian.WriteUInt16LittleEndian(payload, (ushort)subCommand);
@@ -180,7 +181,8 @@ public sealed class MitsubishiMcBinary3EFrameBuilder
         MitsubishiMcConnectionOptions options,
         IReadOnlyCollection<byte> payload)
     {
-        var frame = new List<byte>();
+        const int frameHeaderLength = 11;
+        var frame = new List<byte>(frameHeaderLength + payload.Count);
 
         MitsubishiMcEndian.WriteUInt16LittleEndian(frame, SubHeader);
         frame.Add(options.NetworkNumber);
