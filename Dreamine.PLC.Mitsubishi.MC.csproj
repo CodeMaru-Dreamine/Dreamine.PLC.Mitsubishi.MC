@@ -6,7 +6,7 @@
 		<Nullable>enable</Nullable>
 
 		<PackageId>Dreamine.PLC.Mitsubishi.MC</PackageId>
-		<Version>1.0.0</Version>
+		<Version>1.0.1</Version>
 		<Authors>Dreamine Core Team</Authors>
 		<Company>Dreamine</Company>
 		<Description>Mitsubishi MC protocol adapter for Dreamine PLC communication.</Description>
