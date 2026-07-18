@@ -6,20 +6,82 @@ using Dreamine.PLC.Mitsubishi.MC.Protocol;
 namespace Dreamine.PLC.Mitsubishi.MC.Simulation;
 
 /// <summary>
-/// Executes a minimal Mitsubishi MC Binary 3E protocol simulation for read/write tests.
+/// \if KO
+/// <para>읽기·쓰기 테스트용 최소 Mitsubishi MC Binary 3E 시뮬레이션을 실행합니다.</para>
+/// \endif
+/// \if EN
+/// <para>Executes a minimal Mitsubishi MC Binary 3E simulation for read/write tests.</para>
+/// \endif
 /// </summary>
 public sealed class MitsubishiMcBinary3ESimulatorProtocol
 {
+    /// <summary>
+    /// \if KO
+    /// <para>Request Sub Header 값을 보관합니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>Stores the request sub header value.</para>
+    /// \endif
+    /// </summary>
     private const ushort RequestSubHeader = 0x5000;
+    /// <summary>
+    /// \if KO
+    /// <para>Response Sub Header 값을 보관합니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>Stores the response sub header value.</para>
+    /// \endif
+    /// </summary>
     private const ushort ResponseSubHeader = 0xD000;
+    /// <summary>
+    /// \if KO
+    /// <para>memory 값을 보관합니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>Stores the memory value.</para>
+    /// \endif
+    /// </summary>
     private readonly InMemoryPlcMemory _memory;
+    /// <summary>
+    /// \if KO
+    /// <para>options 값을 보관합니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>Stores the options value.</para>
+    /// \endif
+    /// </summary>
     private readonly MitsubishiMcSimulatorServerOptions _options;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="MitsubishiMcBinary3ESimulatorProtocol"/> class.
+    /// \if KO
+    /// <para>공유 PLC 메모리와 옵션으로 시뮬레이터 프로토콜을 초기화합니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>Initializes the simulator protocol with shared PLC memory and options.</para>
+    /// \endif
     /// </summary>
-    /// <param name="memory">The shared PLC memory.</param>
-    /// <param name="options">The simulator options.</param>
+    /// <param name="memory">
+    /// \if KO
+    /// <para>공유 PLC 메모리입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The shared PLC memory.</para>
+    /// \endif
+    /// </param><param name="options">
+    /// \if KO
+    /// <para>시뮬레이터 옵션입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The simulator options.</para>
+    /// \endif
+    /// </param><exception cref="ArgumentNullException">
+    /// \if KO
+    /// <para>메모리 또는 옵션이 <see langword="null"/>인 경우 발생합니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>Thrown when memory or options is <see langword="null"/>.</para>
+    /// \endif
+    /// </exception>
     public MitsubishiMcBinary3ESimulatorProtocol(
         InMemoryPlcMemory memory,
         MitsubishiMcSimulatorServerOptions options)
@@ -29,15 +91,38 @@ public sealed class MitsubishiMcBinary3ESimulatorProtocol
     }
 
     /// <summary>
-    /// Occurs when the simulator has a diagnostic status message.
+    /// \if KO
+    /// <para>시뮬레이터 진단 상태 메시지가 발생할 때 발생합니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>Occurs when the simulator emits a diagnostic status message.</para>
+    /// \endif
     /// </summary>
     public event EventHandler<string>? StatusChanged;
 
     /// <summary>
-    /// Executes one Binary 3E request frame and returns a Binary 3E response frame.
+    /// \if KO
+    /// <para>Binary 3E 요청 프레임 하나를 실행하고 응답 프레임을 반환합니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>Executes one Binary 3E request and returns its response frame.</para>
+    /// \endif
     /// </summary>
-    /// <param name="requestFrame">The MC request frame.</param>
-    /// <returns>The MC response frame.</returns>
+    /// <param name="requestFrame">
+    /// \if KO
+    /// <para>MC 요청 프레임입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The MC request frame.</para>
+    /// \endif
+    /// </param><returns>
+    /// \if KO
+    /// <para>MC 응답 프레임입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The MC response frame.</para>
+    /// \endif
+    /// </returns>
     public byte[] Execute(ReadOnlySpan<byte> requestFrame)
     {
         if (!TryParseRequest(requestFrame, out var request, out var errorMessage))
@@ -54,6 +139,28 @@ public sealed class MitsubishiMcBinary3ESimulatorProtocol
         };
     }
 
+    /// <summary>
+    /// \if KO
+    /// <para>워드 또는 비트 일괄 읽기 요청을 실행합니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>Executes a word or bit batch-read request.</para>
+    /// \endif
+    /// </summary><param name="request">
+    /// \if KO
+    /// <para>구문 분석된 요청입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The parsed request.</para>
+    /// \endif
+    /// </param><returns>
+    /// \if KO
+    /// <para>응답 프레임입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The response frame.</para>
+    /// \endif
+    /// </returns>
     private byte[] ExecuteRead(McRequest request)
     {
         if (request.Points <= 0)
@@ -95,6 +202,28 @@ public sealed class MitsubishiMcBinary3ESimulatorProtocol
         return BuildResponse(request.Header, 0xC059, []);
     }
 
+    /// <summary>
+    /// \if KO
+    /// <para>워드 또는 비트 일괄 쓰기 요청을 실행합니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>Executes a word or bit batch-write request.</para>
+    /// \endif
+    /// </summary><param name="request">
+    /// \if KO
+    /// <para>구문 분석된 요청입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The parsed request.</para>
+    /// \endif
+    /// </param><returns>
+    /// \if KO
+    /// <para>응답 프레임입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The response frame.</para>
+    /// \endif
+    /// </returns>
     private byte[] ExecuteWrite(McRequest request)
     {
         if (request.Points <= 0)
@@ -146,6 +275,28 @@ public sealed class MitsubishiMcBinary3ESimulatorProtocol
         return BuildResponse(request.Header, 0xC059, []);
     }
 
+    /// <summary>
+    /// \if KO
+    /// <para>트리거 요청에 대해 증가된 자동 워드 응답을 메모리에 씁니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>Writes an incremented automatic word response for a trigger request.</para>
+    /// \endif
+    /// </summary><param name="request">
+    /// \if KO
+    /// <para>쓰기 요청입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The write request.</para>
+    /// \endif
+    /// </param><param name="values">
+    /// \if KO
+    /// <para>쓴 값입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The written values.</para>
+    /// \endif
+    /// </param>
     private void ApplyAutoWordResponse(McRequest request, IReadOnlyList<short> values)
     {
         if (!_options.EnableAutoWordResponse || values.Count != 1)
@@ -172,6 +323,42 @@ public sealed class MitsubishiMcBinary3ESimulatorProtocol
         StatusChanged?.Invoke(this, $"MC auto response: D{_options.AutoResponseOffset}={responseValue}");
     }
 
+    /// <summary>
+    /// \if KO
+    /// <para>Binary 3E 요청 헤더, 명령, 주소, 점 수 및 데이터를 구문 분석합니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>Parses Binary 3E request header, command, address, points, and data.</para>
+    /// \endif
+    /// </summary><param name="frame">
+    /// \if KO
+    /// <para>요청 프레임입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The request frame.</para>
+    /// \endif
+    /// </param><param name="request">
+    /// \if KO
+    /// <para>구문 분석된 요청입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The parsed request.</para>
+    /// \endif
+    /// </param><param name="errorMessage">
+    /// \if KO
+    /// <para>실패 메시지입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The failure message.</para>
+    /// \endif
+    /// </param><returns>
+    /// \if KO
+    /// <para>성공하면 <see langword="true"/>입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para><see langword="true"/> on success.</para>
+    /// \endif
+    /// </returns>
     private static bool TryParseRequest(
         ReadOnlySpan<byte> frame,
         out McRequest request,
@@ -221,6 +408,35 @@ public sealed class MitsubishiMcBinary3ESimulatorProtocol
         return true;
     }
 
+    /// <summary>
+    /// \if KO
+    /// <para>가능한 요청 라우팅 정보를 보존해 오류 응답을 만듭니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>Builds an error response while preserving available request routing data.</para>
+    /// \endif
+    /// </summary><param name="requestFrame">
+    /// \if KO
+    /// <para>원본 요청입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The original request.</para>
+    /// \endif
+    /// </param><param name="endCode">
+    /// \if KO
+    /// <para>오류 종료 코드입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The error end code.</para>
+    /// \endif
+    /// </param><returns>
+    /// \if KO
+    /// <para>오류 응답입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The error response.</para>
+    /// \endif
+    /// </returns>
     private static byte[] BuildErrorResponse(ReadOnlySpan<byte> requestFrame, ushort endCode)
     {
         var header = new byte[7];
@@ -237,6 +453,49 @@ public sealed class MitsubishiMcBinary3ESimulatorProtocol
         return BuildResponse(header, endCode, []);
     }
 
+    /// <summary>
+    /// \if KO
+    /// <para>요청 라우팅 헤더, 종료 코드 및 데이터로 Binary 3E 응답을 만듭니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>Builds a Binary 3E response from routing header, end code, and data.</para>
+    /// \endif
+    /// </summary><param name="requestHeader">
+    /// \if KO
+    /// <para>요청 헤더입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The request header.</para>
+    /// \endif
+    /// </param><param name="endCode">
+    /// \if KO
+    /// <para>종료 코드입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The end code.</para>
+    /// \endif
+    /// </param><param name="data">
+    /// \if KO
+    /// <para>응답 데이터입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The response data.</para>
+    /// \endif
+    /// </param><returns>
+    /// \if KO
+    /// <para>응답 프레임입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The response frame.</para>
+    /// \endif
+    /// </returns><exception cref="OverflowException">
+    /// \if KO
+    /// <para>응답 데이터 길이가 프로토콜 범위를 벗어난 경우 발생합니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>Thrown when response data exceeds protocol length.</para>
+    /// \endif
+    /// </exception>
     private static byte[] BuildResponse(IReadOnlyList<byte> requestHeader, ushort endCode, IReadOnlyList<byte> data)
     {
         var frame = new List<byte>(11 + data.Count);
@@ -259,6 +518,28 @@ public sealed class MitsubishiMcBinary3ESimulatorProtocol
         return frame.ToArray();
     }
 
+    /// <summary>
+    /// \if KO
+    /// <para>두 비트씩 상·하위 니블에 압축합니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>Packs two bits into the high and low nibbles of each byte.</para>
+    /// \endif
+    /// </summary><param name="values">
+    /// \if KO
+    /// <para>비트 값입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The bit values.</para>
+    /// \endif
+    /// </param><returns>
+    /// \if KO
+    /// <para>압축된 바이트입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The packed bytes.</para>
+    /// \endif
+    /// </returns>
     private static byte[] PackBits(IReadOnlyList<bool> values)
     {
         var bytes = new byte[(values.Count + 1) / 2];
@@ -282,6 +563,35 @@ public sealed class MitsubishiMcBinary3ESimulatorProtocol
         return bytes;
     }
 
+    /// <summary>
+    /// \if KO
+    /// <para>니블로 압축된 데이터를 비트 배열로 풉니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>Unpacks nibble-packed data into a bit array.</para>
+    /// \endif
+    /// </summary><param name="data">
+    /// \if KO
+    /// <para>압축 데이터입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The packed data.</para>
+    /// \endif
+    /// </param><param name="count">
+    /// \if KO
+    /// <para>풀 비트 수입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The bit count.</para>
+    /// \endif
+    /// </param><returns>
+    /// \if KO
+    /// <para>비트 배열입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The bit array.</para>
+    /// \endif
+    /// </returns>
     private static bool[] UnpackBits(ReadOnlySpan<byte> data, int count)
     {
         var values = new bool[count];
@@ -296,21 +606,123 @@ public sealed class MitsubishiMcBinary3ESimulatorProtocol
         return values;
     }
 
+    /// <summary>
+    /// \if KO
+    /// <para>리틀 엔디언 16비트 값을 읽습니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>Reads a little-endian 16-bit value.</para>
+    /// \endif
+    /// </summary><param name="buffer">
+    /// \if KO
+    /// <para>버퍼입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The buffer.</para>
+    /// \endif
+    /// </param><param name="offset">
+    /// \if KO
+    /// <para>오프셋입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The offset.</para>
+    /// \endif
+    /// </param><returns>
+    /// \if KO
+    /// <para>읽은 값입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The value read.</para>
+    /// \endif
+    /// </returns>
     private static ushort ReadUInt16LittleEndian(ReadOnlySpan<byte> buffer, int offset)
     {
         return (ushort)(buffer[offset] | (buffer[offset + 1] << 8));
     }
 
+    /// <summary>
+    /// \if KO
+    /// <para>리틀 엔디언 24비트 값을 읽습니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>Reads a little-endian 24-bit value.</para>
+    /// \endif
+    /// </summary><param name="buffer">
+    /// \if KO
+    /// <para>버퍼입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The buffer.</para>
+    /// \endif
+    /// </param><param name="offset">
+    /// \if KO
+    /// <para>오프셋입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The offset.</para>
+    /// \endif
+    /// </param><returns>
+    /// \if KO
+    /// <para>읽은 값입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The value read.</para>
+    /// \endif
+    /// </returns>
     private static int ReadUInt24LittleEndian(ReadOnlySpan<byte> buffer, int offset)
     {
         return buffer[offset] | (buffer[offset + 1] << 8) | (buffer[offset + 2] << 16);
     }
 
+    /// <summary>
+    /// \if KO
+    /// <para>시뮬레이터가 디바이스 코드를 지원하는지 확인합니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>Determines whether the simulator supports a device code.</para>
+    /// \endif
+    /// </summary><param name="deviceCode">
+    /// \if KO
+    /// <para>디바이스 코드입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The device code.</para>
+    /// \endif
+    /// </param><returns>
+    /// \if KO
+    /// <para>지원하면 <see langword="true"/>입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para><see langword="true"/> when supported.</para>
+    /// \endif
+    /// </returns>
     private static bool IsSupportedDeviceCode(byte deviceCode)
     {
         return deviceCode is 0xA8 or 0x90 or 0x9C or 0x9D or 0xA0 or 0xB4 or 0xAF or 0xB0;
     }
 
+    /// <summary>
+    /// \if KO
+    /// <para>MC 디바이스 코드를 공통 PLC 타입으로 변환합니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>Converts an MC device code to a common PLC type.</para>
+    /// \endif
+    /// </summary><param name="deviceCode">
+    /// \if KO
+    /// <para>디바이스 코드입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The device code.</para>
+    /// \endif
+    /// </param><returns>
+    /// \if KO
+    /// <para>공통 디바이스 타입입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The common device type.</para>
+    /// \endif
+    /// </returns>
     private static PlcDeviceType ToDeviceType(byte deviceCode)
     {
         return deviceCode switch
@@ -327,6 +739,64 @@ public sealed class MitsubishiMcBinary3ESimulatorProtocol
         };
     }
 
+    /// <summary>
+    /// \if KO
+    /// <para>구문 분석된 MC 요청 필드를 보관합니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>Stores parsed MC request fields.</para>
+    /// \endif
+    /// </summary>
+    /// <param name="Header">
+    /// \if KO
+    /// <para>라우팅 헤더입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The routing header.</para>
+    /// \endif
+    /// </param><param name="Command">
+    /// \if KO
+    /// <para>명령입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The command.</para>
+    /// \endif
+    /// </param><param name="SubCommand">
+    /// \if KO
+    /// <para>하위 명령입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The sub-command.</para>
+    /// \endif
+    /// </param><param name="DeviceOffset">
+    /// \if KO
+    /// <para>디바이스 오프셋입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The device offset.</para>
+    /// \endif
+    /// </param><param name="DeviceCode">
+    /// \if KO
+    /// <para>디바이스 코드입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The device code.</para>
+    /// \endif
+    /// </param><param name="Points">
+    /// \if KO
+    /// <para>점 수입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The point count.</para>
+    /// \endif
+    /// </param><param name="Data">
+    /// \if KO
+    /// <para>요청 데이터입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The request data.</para>
+    /// \endif
+    /// </param>
     private readonly record struct McRequest(
         byte[] Header,
         ushort Command,

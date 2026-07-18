@@ -5,32 +5,137 @@ using Dreamine.PLC.Core.Memory;
 namespace Dreamine.PLC.Mitsubishi.MC.Simulation;
 
 /// <summary>
-/// Provides a minimal Mitsubishi MC Binary 3E TCP simulator server for local and cross-PC tests.
+/// \if KO
+/// <para>로컬 및 PC 간 테스트용 최소 Mitsubishi MC Binary 3E TCP 서버를 제공합니다.</para>
+/// \endif
+/// \if EN
+/// <para>Provides a minimal Mitsubishi MC Binary 3E TCP server for local and cross-PC tests.</para>
+/// \endif
 /// </summary>
 public sealed class MitsubishiMcTcpSimulatorServer : IAsyncDisposable
 {
+    /// <summary>
+    /// \if KO
+    /// <para>options 값을 보관합니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>Stores the options value.</para>
+    /// \endif
+    /// </summary>
     private readonly MitsubishiMcSimulatorServerOptions _options;
+    /// <summary>
+    /// \if KO
+    /// <para>protocol 값을 보관합니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>Stores the protocol value.</para>
+    /// \endif
+    /// </summary>
     private readonly MitsubishiMcBinary3ESimulatorProtocol _protocol;
+    /// <summary>
+    /// \if KO
+    /// <para>client Tasks 값을 보관합니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>Stores the client tasks value.</para>
+    /// \endif
+    /// </summary>
     private readonly List<Task> _clientTasks = [];
+    /// <summary>
+    /// \if KO
+    /// <para>sync Root 값을 보관합니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>Stores the sync root value.</para>
+    /// \endif
+    /// </summary>
     private readonly object _syncRoot = new();
+    /// <summary>
+    /// \if KO
+    /// <para>cts 값을 보관합니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>Stores the cts value.</para>
+    /// \endif
+    /// </summary>
     private CancellationTokenSource? _cts;
+    /// <summary>
+    /// \if KO
+    /// <para>listener 값을 보관합니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>Stores the listener value.</para>
+    /// \endif
+    /// </summary>
     private TcpListener? _listener;
+    /// <summary>
+    /// \if KO
+    /// <para>accept Task 값을 보관합니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>Stores the accept task value.</para>
+    /// \endif
+    /// </summary>
     private Task? _acceptTask;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="MitsubishiMcTcpSimulatorServer"/> class.
+    /// \if KO
+    /// <para>새 메모리와 지정한 옵션으로 TCP 서버를 초기화합니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>Initializes the TCP server with new memory and specified options.</para>
+    /// \endif
     /// </summary>
-    /// <param name="options">The simulator options.</param>
+    /// <param name="options">
+    /// \if KO
+    /// <para>시뮬레이터 옵션입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The simulator options.</para>
+    /// \endif
+    /// </param><exception cref="ArgumentNullException">
+    /// \if KO
+    /// <para>옵션이 <see langword="null"/>인 경우 발생합니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>Thrown when options is <see langword="null"/>.</para>
+    /// \endif
+    /// </exception>
     public MitsubishiMcTcpSimulatorServer(MitsubishiMcSimulatorServerOptions options)
         : this(options, new InMemoryPlcMemory())
     {
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="MitsubishiMcTcpSimulatorServer"/> class.
+    /// \if KO
+    /// <para>공유 메모리와 옵션으로 TCP 서버를 초기화합니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>Initializes the TCP server with shared memory and options.</para>
+    /// \endif
     /// </summary>
-    /// <param name="options">The simulator options.</param>
-    /// <param name="memory">The shared PLC memory.</param>
+    /// <param name="options">
+    /// \if KO
+    /// <para>옵션입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The options.</para>
+    /// \endif
+    /// </param><param name="memory">
+    /// \if KO
+    /// <para>공유 메모리입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The shared memory.</para>
+    /// \endif
+    /// </param><exception cref="ArgumentNullException">
+    /// \if KO
+    /// <para>옵션 또는 메모리가 <see langword="null"/>인 경우 발생합니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>Thrown when options or memory is <see langword="null"/>.</para>
+    /// \endif
+    /// </exception>
     public MitsubishiMcTcpSimulatorServer(MitsubishiMcSimulatorServerOptions options, InMemoryPlcMemory memory)
     {
         _options = options ?? throw new ArgumentNullException(nameof(options));
@@ -39,20 +144,48 @@ public sealed class MitsubishiMcTcpSimulatorServer : IAsyncDisposable
     }
 
     /// <summary>
-    /// Occurs when the server status changes.
+    /// \if KO
+    /// <para>서버 상태 메시지가 변경될 때 발생합니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>Occurs when the server status message changes.</para>
+    /// \endif
     /// </summary>
     public event EventHandler<string>? StatusChanged;
 
     /// <summary>
-    /// Gets whether the server is running.
+    /// \if KO
+    /// <para>서버 실행 여부를 가져옵니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>Gets whether the server is running.</para>
+    /// \endif
     /// </summary>
     public bool IsRunning => _listener is not null;
 
     /// <summary>
-    /// Starts the MC TCP simulator server.
+    /// \if KO
+    /// <para>TCP 수신기와 수락 루프를 시작합니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>Starts the TCP listener and acceptance loop.</para>
+    /// \endif
     /// </summary>
-    /// <param name="cancellationToken">The cancellation token.</param>
-    /// <returns>A task that represents the asynchronous operation.</returns>
+    /// <param name="cancellationToken">
+    /// \if KO
+    /// <para>서버 수명 토큰입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The server-lifetime token.</para>
+    /// \endif
+    /// </param><returns>
+    /// \if KO
+    /// <para>시작 작업입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The start task.</para>
+    /// \endif
+    /// </returns>
     public Task StartAsync(CancellationToken cancellationToken = default)
     {
         if (_listener is not null)
@@ -70,9 +203,21 @@ public sealed class MitsubishiMcTcpSimulatorServer : IAsyncDisposable
     }
 
     /// <summary>
-    /// Stops the MC TCP simulator server.
+    /// \if KO
+    /// <para>TCP 수신기를 중지하고 클라이언트 작업 종료를 기다립니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>Stops the TCP listener and waits for client tasks.</para>
+    /// \endif
     /// </summary>
-    /// <returns>A task that represents the asynchronous operation.</returns>
+    /// <returns>
+    /// \if KO
+    /// <para>중지 작업입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The stop task.</para>
+    /// \endif
+    /// </returns>
     public async Task StopAsync()
     {
         if (_listener is null)
@@ -118,13 +263,49 @@ public sealed class MitsubishiMcTcpSimulatorServer : IAsyncDisposable
         StatusChanged?.Invoke(this, "MC TCP simulator server stopped.");
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// \if KO
+    /// <para>프로토콜 이벤트 구독을 해제하고 서버를 중지합니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>Unsubscribes protocol events and stops the server.</para>
+    /// \endif
+    /// </summary><returns>
+    /// \if KO
+    /// <para>비동기 해제 작업입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The asynchronous disposal operation.</para>
+    /// \endif
+    /// </returns>
     public async ValueTask DisposeAsync()
     {
         _protocol.StatusChanged -= OnProtocolStatusChanged;
         await StopAsync().ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// \if KO
+    /// <para>TCP 클라이언트를 수락하고 처리 작업을 추적합니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>Accepts TCP clients and tracks handling tasks.</para>
+    /// \endif
+    /// </summary><param name="cancellationToken">
+    /// \if KO
+    /// <para>취소 토큰입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The cancellation token.</para>
+    /// \endif
+    /// </param><returns>
+    /// \if KO
+    /// <para>수락 루프입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The acceptance loop.</para>
+    /// \endif
+    /// </returns>
     private async Task AcceptLoopAsync(CancellationToken cancellationToken)
     {
         while (!cancellationToken.IsCancellationRequested && _listener is not null)
@@ -153,6 +334,35 @@ public sealed class MitsubishiMcTcpSimulatorServer : IAsyncDisposable
         }
     }
 
+    /// <summary>
+    /// \if KO
+    /// <para>한 클라이언트의 Binary 3E 프레임을 반복 처리합니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>Repeatedly handles Binary 3E frames for one client.</para>
+    /// \endif
+    /// </summary><param name="client">
+    /// \if KO
+    /// <para>클라이언트입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The client.</para>
+    /// \endif
+    /// </param><param name="cancellationToken">
+    /// \if KO
+    /// <para>취소 토큰입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The cancellation token.</para>
+    /// \endif
+    /// </param><returns>
+    /// \if KO
+    /// <para>처리 작업입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The handling task.</para>
+    /// \endif
+    /// </returns>
     private async Task HandleClientAsync(TcpClient client, CancellationToken cancellationToken)
     {
         using (client)
@@ -189,6 +399,49 @@ public sealed class MitsubishiMcTcpSimulatorServer : IAsyncDisposable
         StatusChanged?.Invoke(this, "MC TCP simulator client disconnected.");
     }
 
+    /// <summary>
+    /// \if KO
+    /// <para>헤더의 데이터 길이에 맞춰 완전한 Binary 3E 요청을 읽습니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>Reads a complete Binary 3E request using its header length.</para>
+    /// \endif
+    /// </summary><param name="stream">
+    /// \if KO
+    /// <para>스트림입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The stream.</para>
+    /// \endif
+    /// </param><param name="cancellationToken">
+    /// \if KO
+    /// <para>취소 토큰입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The cancellation token.</para>
+    /// \endif
+    /// </param><returns>
+    /// \if KO
+    /// <para>요청 프레임입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The request frame.</para>
+    /// \endif
+    /// </returns><exception cref="InvalidOperationException">
+    /// \if KO
+    /// <para>데이터 길이가 잘못된 경우 발생합니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>Thrown when data length is invalid.</para>
+    /// \endif
+    /// </exception><exception cref="IOException">
+    /// \if KO
+    /// <para>프레임 수신 중 연결이 닫힌 경우 발생합니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>Thrown when the connection closes during receipt.</para>
+    /// \endif
+    /// </exception>
     private static async Task<byte[]> ReceiveBinary3EFrameAsync(NetworkStream stream, CancellationToken cancellationToken)
     {
         var header = new byte[9];
@@ -209,6 +462,49 @@ public sealed class MitsubishiMcTcpSimulatorServer : IAsyncDisposable
         return frame;
     }
 
+    /// <summary>
+    /// \if KO
+    /// <para>대상 버퍼가 찰 때까지 스트림을 읽습니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>Reads until the destination buffer is full.</para>
+    /// \endif
+    /// </summary><param name="stream">
+    /// \if KO
+    /// <para>스트림입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The stream.</para>
+    /// \endif
+    /// </param><param name="buffer">
+    /// \if KO
+    /// <para>버퍼입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The buffer.</para>
+    /// \endif
+    /// </param><param name="cancellationToken">
+    /// \if KO
+    /// <para>취소 토큰입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The cancellation token.</para>
+    /// \endif
+    /// </param><returns>
+    /// \if KO
+    /// <para>읽기 작업입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The read task.</para>
+    /// \endif
+    /// </returns><exception cref="IOException">
+    /// \if KO
+    /// <para>버퍼가 차기 전에 연결이 닫힌 경우 발생합니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>Thrown when connection closes before the buffer is full.</para>
+    /// \endif
+    /// </exception>
     private static async Task ReadExactlyAsync(NetworkStream stream, byte[] buffer, CancellationToken cancellationToken)
     {
         var offset = 0;
@@ -224,6 +520,28 @@ public sealed class MitsubishiMcTcpSimulatorServer : IAsyncDisposable
         }
     }
 
+    /// <summary>
+    /// \if KO
+    /// <para>바인딩 호스트를 IP 주소로 변환하며 잘못되면 Any를 사용합니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>Converts a bind host to an IP address, using Any when invalid.</para>
+    /// \endif
+    /// </summary><param name="host">
+    /// \if KO
+    /// <para>호스트입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The host.</para>
+    /// \endif
+    /// </param><returns>
+    /// \if KO
+    /// <para>IP 주소입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The IP address.</para>
+    /// \endif
+    /// </returns>
     private static IPAddress ParseAddress(string host)
     {
         if (string.IsNullOrWhiteSpace(host) || host == "*" || host == "+")
@@ -234,6 +552,28 @@ public sealed class MitsubishiMcTcpSimulatorServer : IAsyncDisposable
         return IPAddress.TryParse(host, out var address) ? address : IPAddress.Any;
     }
 
+    /// <summary>
+    /// \if KO
+    /// <para>프로토콜 상태 메시지를 서버 이벤트로 전달합니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>Forwards a protocol status message through the server event.</para>
+    /// \endif
+    /// </summary><param name="sender">
+    /// \if KO
+    /// <para>이벤트 원본입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The source.</para>
+    /// \endif
+    /// </param><param name="e">
+    /// \if KO
+    /// <para>상태 메시지입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The status message.</para>
+    /// \endif
+    /// </param>
     private void OnProtocolStatusChanged(object? sender, string e)
     {
         StatusChanged?.Invoke(this, e);
