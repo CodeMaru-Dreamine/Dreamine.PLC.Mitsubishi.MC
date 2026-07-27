@@ -3,17 +3,48 @@
 namespace Dreamine.PLC.Mitsubishi.MC.Protocol;
 
 /// <summary>
-/// Parses Mitsubishi MC protocol Binary 3E response frames.
+/// \if KO
+/// <para>Mitsubishi MC Binary 3E 응답 프레임을 구문 분석합니다.</para>
+/// \endif
+/// \if EN
+/// <para>Parses Mitsubishi MC Binary 3E response frames.</para>
+/// \endif
 /// </summary>
 public sealed class MitsubishiMcBinary3EResponseParser
 {
+    /// <summary>
+    /// \if KO
+    /// <para>Minimum Response Length 값을 보관합니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>Stores the minimum response length value.</para>
+    /// \endif
+    /// </summary>
     private const int MinimumResponseLength = 11;
 
     /// <summary>
-    /// Parses a raw Binary 3E response frame.
+    /// \if KO
+    /// <para>원시 Binary 3E 응답의 헤더, 길이, 종료 코드 및 데이터를 구문 분석합니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>Parses header, length, end code, and data from a raw Binary 3E response.</para>
+    /// \endif
     /// </summary>
-    /// <param name="frame">The response frame bytes.</param>
-    /// <returns>The parsed Binary 3E response.</returns>
+    /// <param name="frame">
+    /// \if KO
+    /// <para>응답 프레임입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The response frame.</para>
+    /// \endif
+    /// </param><returns>
+    /// \if KO
+    /// <para>구문 분석된 응답 결과입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The parsed response result.</para>
+    /// \endif
+    /// </returns>
     public PlcResult<MitsubishiMcBinary3EResponse> Parse(ReadOnlySpan<byte> frame)
     {
         if (frame.Length < MinimumResponseLength)
@@ -60,11 +91,35 @@ public sealed class MitsubishiMcBinary3EResponseParser
     }
 
     /// <summary>
-    /// Parses word values from a Binary 3E read response frame.
+    /// \if KO
+    /// <para>Binary 3E 읽기 응답에서 워드 값을 구문 분석합니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>Parses word values from a Binary 3E read response.</para>
+    /// \endif
     /// </summary>
-    /// <param name="frame">The response frame bytes.</param>
-    /// <param name="count">The expected word count.</param>
-    /// <returns>The parsed word values.</returns>
+    /// <param name="frame">
+    /// \if KO
+    /// <para>응답 프레임입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The response frame.</para>
+    /// \endif
+    /// </param><param name="count">
+    /// \if KO
+    /// <para>예상 워드 수입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The expected word count.</para>
+    /// \endif
+    /// </param><returns>
+    /// \if KO
+    /// <para>워드 값 결과입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The word-value result.</para>
+    /// \endif
+    /// </returns>
     public PlcResult<short[]> ParseReadWords(ReadOnlySpan<byte> frame, int count)
     {
         if (count <= 0)
@@ -100,11 +155,35 @@ public sealed class MitsubishiMcBinary3EResponseParser
     }
 
     /// <summary>
-    /// Parses bit values from a Binary 3E read response frame.
+    /// \if KO
+    /// <para>Binary 3E 읽기 응답에서 압축된 비트 값을 구문 분석합니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>Parses packed bit values from a Binary 3E read response.</para>
+    /// \endif
     /// </summary>
-    /// <param name="frame">The response frame bytes.</param>
-    /// <param name="count">The expected bit count.</param>
-    /// <returns>The parsed bit values.</returns>
+    /// <param name="frame">
+    /// \if KO
+    /// <para>응답 프레임입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The response frame.</para>
+    /// \endif
+    /// </param><param name="count">
+    /// \if KO
+    /// <para>예상 비트 수입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The expected bit count.</para>
+    /// \endif
+    /// </param><returns>
+    /// \if KO
+    /// <para>비트 값 결과입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The bit-value result.</para>
+    /// \endif
+    /// </returns>
     public PlcResult<bool[]> ParseReadBits(ReadOnlySpan<byte> frame, int count)
     {
         if (count <= 0)
@@ -143,6 +222,35 @@ public sealed class MitsubishiMcBinary3EResponseParser
         return PlcResult<bool[]>.Success(values);
     }
 
+    /// <summary>
+    /// \if KO
+    /// <para>지정한 오프셋에서 리틀 엔디언 16비트 값을 읽습니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>Reads a little-endian 16-bit value at the specified offset.</para>
+    /// \endif
+    /// </summary><param name="buffer">
+    /// \if KO
+    /// <para>원본 버퍼입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The source buffer.</para>
+    /// \endif
+    /// </param><param name="offset">
+    /// \if KO
+    /// <para>읽기 오프셋입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The read offset.</para>
+    /// \endif
+    /// </param><returns>
+    /// \if KO
+    /// <para>읽은 값입니다.</para>
+    /// \endif
+    /// \if EN
+    /// <para>The value read.</para>
+    /// \endif
+    /// </returns>
     private static ushort ReadUInt16LittleEndian(ReadOnlySpan<byte> buffer, int offset)
     {
         return (ushort)(buffer[offset] | (buffer[offset + 1] << 8));
