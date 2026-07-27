@@ -206,7 +206,8 @@ public sealed class MitsubishiMcUdpSimulatorServer : IAsyncDisposable
             return;
         }
 
-        _cts?.Cancel();
+        if (_cts is not null)
+            await _cts.CancelAsync().ConfigureAwait(false);
         _udpClient.Close();
         _udpClient.Dispose();
         _udpClient = null;
