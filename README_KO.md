@@ -1,5 +1,20 @@
 # Dreamine.PLC.Mitsubishi.MC
 
+[![CI](https://github.com/CodeMaru-Dreamine/Dreamine.PLC.Mitsubishi.MC/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/CodeMaru-Dreamine/Dreamine.PLC.Mitsubishi.MC/actions/workflows/ci.yml)
+[![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=CodeMaru-Dreamine_Dreamine.PLC.Mitsubishi.MC&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=CodeMaru-Dreamine_Dreamine.PLC.Mitsubishi.MC)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=CodeMaru-Dreamine_Dreamine.PLC.Mitsubishi.MC&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=CodeMaru-Dreamine_Dreamine.PLC.Mitsubishi.MC)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=CodeMaru-Dreamine_Dreamine.PLC.Mitsubishi.MC&metric=coverage)](https://sonarcloud.io/summary/new_code?id=CodeMaru-Dreamine_Dreamine.PLC.Mitsubishi.MC)
+
+[![라이선스](https://img.shields.io/badge/%EB%9D%BC%EC%9D%B4%EC%84%A0%EC%8A%A4-MIT-2496ED.svg)](LICENSE)
+[![.NET](https://img.shields.io/badge/.NET-8-512BD4.svg)](https://dotnet.microsoft.com/download/dotnet/8.0)
+[![NuGet](https://img.shields.io/nuget/v/Dreamine.PLC.Mitsubishi.MC.svg)](https://www.nuget.org/packages/Dreamine.PLC.Mitsubishi.MC)
+[![다운로드](https://img.shields.io/nuget/dt/Dreamine.PLC.Mitsubishi.MC.svg)](https://www.nuget.org/packages/Dreamine.PLC.Mitsubishi.MC)
+
+[![문서](https://img.shields.io/badge/%F0%9F%93%98%20%EB%AC%B8%EC%84%9C-dreamine.kr-2496ED)](https://dreamine.kr/libraries?lang=ko)
+[![가이드](https://img.shields.io/badge/%F0%9F%93%98%20%EA%B0%80%EC%9D%B4%EB%93%9C-dreamine.kr-2496ED)](https://dreamine.kr/guide?lang=ko)
+[![플레이그라운드](https://img.shields.io/badge/%F0%9F%8E%AE%20%ED%94%8C%EB%A0%88%EC%9D%B4%EA%B7%B8%EB%9D%BC%EC%9A%B4%EB%93%9C-dreamine.kr-7B2CBF)](https://dreamine.kr/playground?lang=ko)
+[![도서](https://img.shields.io/badge/%F0%9F%93%96%20%EB%8F%84%EC%84%9C-%EC%8B%A4%EC%A0%84%20MVVM%20%EC%95%84%ED%82%A4%ED%85%8D%EC%B2%98-black)](https://bookk.co.kr/bookStore/69c0f1b41461ec1ae849a0f6)
+
 [English documentation](./README.md)
 
 Dreamine PLC 통신을 위한 Mitsubishi MC Protocol 어댑터입니다.
