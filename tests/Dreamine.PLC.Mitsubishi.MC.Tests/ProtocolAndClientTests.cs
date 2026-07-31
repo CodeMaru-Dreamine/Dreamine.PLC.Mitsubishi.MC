@@ -12,6 +12,12 @@ public sealed class ProtocolAndClientTests
     [Theory]
     [InlineData(PlcDeviceType.D, MitsubishiMcDeviceCode.D)]
     [InlineData(PlcDeviceType.M, MitsubishiMcDeviceCode.M)]
+    [InlineData(PlcDeviceType.X, MitsubishiMcDeviceCode.X)]
+    [InlineData(PlcDeviceType.Y, MitsubishiMcDeviceCode.Y)]
+    [InlineData(PlcDeviceType.B, MitsubishiMcDeviceCode.B)]
+    [InlineData(PlcDeviceType.W, MitsubishiMcDeviceCode.W)]
+    [InlineData(PlcDeviceType.R, MitsubishiMcDeviceCode.R)]
+    [InlineData(PlcDeviceType.ZR, MitsubishiMcDeviceCode.ZR)]
     public void DeviceCodeMapper_MapsSupportedTypes(
         PlcDeviceType deviceType,
         MitsubishiMcDeviceCode expected)
@@ -83,6 +89,19 @@ public sealed class ProtocolAndClientTests
         var result = new MitsubishiMcBinary3EResponseParser().Parse(frame);
 
         Assert.False(result.IsSuccess);
+    }
+
+    [Fact]
+    public void ResponseParser_RejectsInvalidCountsAndIncompletePayloads()
+    {
+        var parser = new MitsubishiMcBinary3EResponseParser();
+
+        Assert.False(parser.ParseReadWords(BuildResponse(0, 0), 0).IsSuccess);
+        Assert.False(parser.ParseReadBits(BuildResponse(0, 0), -1).IsSuccess);
+        Assert.False(parser.ParseReadWords(BuildResponse(0, 0, 1), 1).IsSuccess);
+        Assert.False(parser.ParseReadBits(BuildResponse(0, 0), 1).IsSuccess);
+        Assert.False(parser.ParseReadWords(BuildResponse(0x51, 0xC0), 1).IsSuccess);
+        Assert.False(parser.ParseReadBits(BuildResponse(0x51, 0xC0), 1).IsSuccess);
     }
 
     public static TheoryData<byte[]> InvalidResponses =>
@@ -163,6 +182,86 @@ public sealed class ProtocolAndClientTests
 
         await Assert.ThrowsAsync<OperationCanceledException>(
             () => transport.ConnectAsync("localhost", 5000, 100, cancellation.Token));
+    }
+
+    [Fact]
+    public async Task Client_ReportsTransportAndProtocolFailuresForEveryOperation()
+    {
+        await using var transport = new FakeMitsubishiMcTransport();
+        await using var client = CreateClient(transport);
+        Assert.True((await client.ConnectAsync()).IsSuccess);
+        var words = new PlcAddress(PlcDeviceType.D, 100);
+        var bits = new PlcAddress(PlcDeviceType.M, 10);
+
+        Assert.False((await client.ReadWordsAsync(words, 1)).IsSuccess);
+        Assert.False((await client.ReadBitsAsync(bits, 1)).IsSuccess);
+        Assert.False((await client.WriteWordsAsync(words, [1])).IsSuccess);
+        Assert.False((await client.WriteBitsAsync(bits, [true])).IsSuccess);
+
+        transport.EnqueueResponse(BuildResponse(0x51, 0xC0));
+        Assert.False((await client.ReadWordsAsync(words, 1)).IsSuccess);
+        transport.EnqueueResponse(BuildResponse(0x51, 0xC0));
+        Assert.False((await client.ReadBitsAsync(bits, 1)).IsSuccess);
+        transport.EnqueueResponse(BuildResponse(0x51, 0xC0));
+        Assert.False((await client.WriteWordsAsync(words, [1])).IsSuccess);
+        transport.EnqueueResponse(BuildResponse(0x51, 0xC0));
+        Assert.False((await client.WriteBitsAsync(bits, [true])).IsSuccess);
+    }
+
+    [Fact]
+    public async Task Client_ConstructorsValidateDependenciesAndTransportTypes()
+    {
+        Assert.Throws<ArgumentNullException>(() => new MitsubishiMcPlcClient(null!));
+        Assert.Throws<ArgumentOutOfRangeException>(
+            () => new MitsubishiMcPlcClient(
+                new MitsubishiMcConnectionOptions
+                {
+                    TransportType = (MitsubishiMcTransportType)999
+                }));
+
+        var options = new MitsubishiMcConnectionOptions();
+        var transport = new FakeMitsubishiMcTransport();
+        var builder = new MitsubishiMcBinary3EFrameBuilder();
+        var parser = new MitsubishiMcBinary3EResponseParser();
+        Assert.Throws<ArgumentNullException>(
+            () => new MitsubishiMcPlcClient(null!, transport, builder, parser));
+        Assert.Throws<ArgumentNullException>(
+            () => new MitsubishiMcPlcClient(options, null!, builder, parser));
+        Assert.Throws<ArgumentNullException>(
+            () => new MitsubishiMcPlcClient(options, transport, null!, parser));
+        Assert.Throws<ArgumentNullException>(
+            () => new MitsubishiMcPlcClient(options, transport, builder, null!));
+
+        await using var tcp = new MitsubishiMcPlcClient(
+            new MitsubishiMcConnectionOptions { TransportType = MitsubishiMcTransportType.Tcp });
+        await using var udp = new MitsubishiMcPlcClient(
+            new MitsubishiMcConnectionOptions { TransportType = MitsubishiMcTransportType.Udp });
+        Assert.Equal(MitsubishiMcTransportType.Tcp, tcp.Options.TransportType);
+        Assert.Equal(MitsubishiMcTransportType.Udp, udp.Options.TransportType);
+    }
+
+    [Fact]
+    public async Task FakeTransport_ValidatesInputCancellationAndDispose()
+    {
+        var transport = new FakeMitsubishiMcTransport();
+        await transport.ConnectAsync("localhost", 5000, 100);
+
+        await Assert.ThrowsAsync<ArgumentNullException>(
+            () => transport.SendAndReceiveAsync(null!, 100, 0));
+        Assert.False((await transport.SendAndReceiveAsync([], 100, 0)).IsSuccess);
+        Assert.Throws<ArgumentNullException>(() => transport.EnqueueResponse(null!));
+
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+        await Assert.ThrowsAsync<OperationCanceledException>(
+            () => transport.DisconnectAsync(cancellation.Token));
+        await Assert.ThrowsAsync<OperationCanceledException>(
+            () => transport.SendAndReceiveAsync([1], 100, 0, cancellation.Token));
+
+        transport.EnqueueResponse(BuildResponse(0, 0));
+        await transport.DisposeAsync();
+        Assert.False(transport.IsConnected);
+        Assert.Empty(transport.SentFrames);
     }
 
     private static MitsubishiMcPlcClient CreateClient(FakeMitsubishiMcTransport transport) =>
